@@ -1,0 +1,34 @@
+@import './base.css';
+body {
+  background-color: #f0ece3 !important;
+}
+
+#app {
+  width: 100%;
+  font-weight: normal;
+  margin: 0 auto;
+}
+
+a,
+.green {
+  text-decoration: none !important;
+  color: #a1b4c3 !important;
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (max-width: 400px) {
+  body {
+    display: flex;
+  }
+
+  #app {
+    width: 100%;
+  }
+}
