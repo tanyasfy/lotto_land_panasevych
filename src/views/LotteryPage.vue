@@ -41,51 +41,50 @@ const dataChart = ref<number[]>([])
 
 const gewinnzahlen = computed(() => {
   if (results.value && !!selectedDatum.value) {
-    const idx = results.value.map((item) => item.date).indexOf(selectedDatum.value)
-    const numbers = Object.values(results.value[idx].numbers)
-    const date = getDateFromString(results.value[idx].date)
-
-    const jackpot = new Intl.NumberFormat('de-DE').format(results.value[idx].jackpot)
-
-    const addNumbers = results.value[idx].additionalNumbers
-
-    return { numbers, date, addNumbers, jackpot }
+    const result = results.value.find(item => item.date === selectedDatum.value)
+    if (result) {
+      const numbers = Object.values(result.numbers)
+      const date = getDateFromString(result.date)
+      const formattedJackpot = new Intl.NumberFormat('de-DE').format(result.jackpot)
+      const addNumbers = result.additionalNumbers
+      return { numbers, date, addNumbers, formattedJackpot }
+    }
+    
   }
   return undefined
 })
 
 watch(gewinnzahlen, (value) => {
   if (value) {
-    jackpot.value = value.jackpot
+    jackpot.value = value.formattedJackpot
   }
 })
 
 const getDataForCharts = computed(() => {
-  const allNumbers = ref(
-    results.value?.map((item) => Object.values(item.numbers.map((num) => Number(num))))
-  )
-  allNumbers.value?.forEach((array) => {
-    array.forEach((number) => {
-      if (frequency.value[number]) {
-        frequency.value[number]++
-      } else {
-        frequency.value[number] = 1
-      }
+  if (results.value) {
+    results.value.forEach(item => {
+      Object.values(item.numbers).forEach(num => {
+        const number = Number(num)
+        if (frequency[number]) {
+          frequency[number]++
+        } else {
+          frequency[number] = 1
+        }
+      })
     })
-  })
 
-  const sortedFrequencies = ref(
-    Object.entries(frequency.value)
-      .sort((a, b) => b[1] - a[1])
+    const sortedFrequencies = Object.entries(frequency)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
-  )
 
-  Object.values(sortedFrequencies.value).forEach((item) => {
-    labels.value.push(`${item[0]} trifft ${item[1]} mal`)
-    dataChart.value.push(item[1])
-  })
+    sortedFrequencies.forEach(([number, count]) => {
+      labels.value.push(`${number} trifft ${count} mal`)
+      dataChart.value.push(count)
+    })
 
-  return labels.value.length > 0 && dataChart.value.length > 0
+    return labels.value.length > 0 && dataChart.value.length > 0
+  }
+  return false
 })
 
 const data = computed(() => ({
@@ -106,7 +105,8 @@ const data = computed(() => ({
 </script>
 
 <template>
-  <div class="results-page">
+  <div>
+  <div class="results-page" v-if="results">
     <div>
       <b-form-select v-model="selectedDatum" :options="date" class="select-date mb-3">
         <template #first>
@@ -129,6 +129,10 @@ const data = computed(() => ({
       <Doughnut :data="data" :options="options" />
     </div>
   </div>
+  <div v-else>
+    <h4>Etwas ist schiff gelaufen. Versuchen Sie es noch später</h4>
+  </div>
+</div>
 </template>
 
 <style scoped>
